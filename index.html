@@ -16,6 +16,71 @@
     <script src="https://unpkg.com/supersimpledev/babel.js"></script>
     <script type="text/babel">
 
+        // ===== CHATBOT INPUT =====
+        function ChatInput() {
+            return (
+                <>
+                    <input
+                        type="text"
+                        placeholder="Send a message"
+                        size="30"
+                    />
+                    <button>Send</button>
+                </>
+            )
+        }
+
+        // ===== CHAT MESSAGE =====
+        function ChatMessage({ message, sender }) {
+
+            return (
+                <div>
+                    {sender === 'bot' && (
+                        <img src="assets/images/robot.png"
+                            alt="user profile picture"
+                            width="35"
+                        />
+                    )}
+                    {message}
+                    {sender === 'user' && (
+                        <img src="assets/images/user.png"
+                            alt="user profile picture"
+                            width="35"
+                        />)}
+                </div>
+            )
+        }
+
+        // ===== RENDERING =====
+        function App() {
+            return (
+                <>
+                    <ChatInput />
+                    <ChatMessage
+                        message="Hello"
+                        sender="user"
+                    />
+                    <ChatMessage
+                        message="How are you"
+                        sender="bot"
+                    />
+                    <ChatMessage
+                        message="I am fine, wby"
+                        sender="user"
+                    />
+                    <ChatMessage
+                        message="I am fine too."
+                        sender="bot"
+                    />
+                </>
+            )
+        }
+        const htmlContainer = document.querySelector('.js-container');
+        const root = ReactDOM.createRoot(htmlContainer);
+        root.render(<App/>);
+
+
+
     </script>
 </body>
 
