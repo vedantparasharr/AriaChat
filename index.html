@@ -21,11 +21,18 @@
             const API_KEY = "AIzaSyAdrWLLmLREofcIAlmYQ-iZs2gAFaPuMAg";
             const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY;
 
+            const systemPrompt = `
+                You are a friendly, conversational chatbot that talks like a real human.
+                Respond naturally and clearly without mentioning that you are an AI or model.
+                Keep answers short, helpful, and engaging.
+            `;
+
+
             const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    contents: [{ parts: [{ text: systemPrompt + prompt }] }]
                 })
             });
 
@@ -35,7 +42,7 @@
 
 
         // ===== CHATBOT INPUT =====
-        function ChatInput({ chatMessages, setChatMessages }) {
+        function ChatInput({ chatMessages, setChatMessages, isLoading, setIsLoading }) {
 
             // ===== INPUT STATE =====
             const [inputText, setInputText] = React.useState('')
@@ -47,17 +54,21 @@
 
             // ===== SEND MESSAGE =====
             async function sendMessage() {
-                if (!inputText.trim()) return;
+                const userInput = inputText.trim();
+                if (!userInput || isLoading) return;
+
+                setInputText('');
+                setIsLoading(true);
 
                 const newChatMessages = [
                     ...chatMessages, {
-                        message: inputText, sender: 'user', id: crypto.randomUUID()
+                        message: userInput, sender: 'user', id: crypto.randomUUID()
                     }
                 ]
                 setChatMessages(newChatMessages)
 
                 try {
-                    const response = await getGeminiResponse(inputText);
+                    const response = await getGeminiResponse(userInput);
                     setChatMessages([
                         ...newChatMessages, {
                             message: response, sender: 'bot', id: crypto.randomUUID()
@@ -71,14 +82,14 @@
                     ]);
                 }
 
-                setInputText('');
+                setIsLoading(false);
             }
 
             function keyInteraction(event) {
-                if(event.key === 'Enter'){
+                if (event.key === 'Enter' && !isLoading) {
                     sendMessage();
                 }
-                else if(event.key === 'Escape'){
+                else if (event.key === 'Escape') {
                     setInputText('');
                 }
             }
@@ -92,9 +103,15 @@
                         size="30"
                         onChange={saveInputText}
                         value={inputText}
-                        onKeyDown = {keyInteraction}
+                        onKeyDown={keyInteraction}
+                        disabled={isLoading}
                     />
-                    <button onClick={sendMessage}>Send</button>
+                    <button
+                        onClick={sendMessage}
+                        disabled={isLoading || !inputText.trim()}
+                    >
+                        {isLoading ? 'Thinking...' : 'Send'}
+                    </button>
                 </>
             )
         }
@@ -145,14 +162,18 @@
         function App() {
 
             // ===== CHAT MESSAGES STATE =====
-            const [chatMessages, setChatMessages] = React.useState([
-
-            ]);
+            const [chatMessages, setChatMessages] = React.useState([]);
+            const [isLoading, setIsLoading] = React.useState(false);
 
             // ===== COMBINE ALL COMPONENTS =====
             return (
                 <>
-                    <ChatInput chatMessages={chatMessages} setChatMessages={setChatMessages} />
+                    <ChatInput
+                        chatMessages={chatMessages}
+                        setChatMessages={setChatMessages}
+                        isLoading={isLoading}
+                        setIsLoading={setIsLoading}
+                    />
                     <ChatMessages chatMessages={chatMessages} />
                 </>
             )
