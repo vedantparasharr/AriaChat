@@ -15,8 +15,24 @@
     <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
     <script src="https://unpkg.com/supersimpledev/chatbot.js"></script>
     <script src="https://unpkg.com/supersimpledev/babel.js"></script>
-
     <script type="text/babel">
+
+        async function getGeminiResponse(prompt) {
+            const API_KEY = "AIzaSyAdrWLLmLREofcIAlmYQ-iZs2gAFaPuMAg";
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY;
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const data = await response.json();
+            return data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+        }
+
 
         // ===== CHATBOT INPUT =====
         function ChatInput({ chatMessages, setChatMessages }) {
@@ -30,7 +46,9 @@
             }
 
             // ===== SEND MESSAGE =====
-            function sendMessage() {
+            async function sendMessage() {
+                if (!inputText.trim()) return;
+
                 const newChatMessages = [
                     ...chatMessages, {
                         message: inputText, sender: 'user', id: crypto.randomUUID()
@@ -38,13 +56,21 @@
                 ]
                 setChatMessages(newChatMessages)
 
-                const response = Chatbot.getResponse(inputText); 
-                console.log(response);
-                setChatMessages([
-                    ...newChatMessages, {
-                        message: response, sender: 'bot', id: crypto.randomUUID()
-                    }
-                ])
+                try {
+                    const response = await getGeminiResponse(inputText);
+                    setChatMessages([
+                        ...newChatMessages, {
+                            message: response, sender: 'bot', id: crypto.randomUUID()
+                        }
+                    ]);
+                } catch (error) {
+                    console.log(error);
+                    setChatMessages([
+                        ...newChatMessages,
+                        { message: "Sorry, I couldn't get a response right now.", sender: 'bot', id: crypto.randomUUID() }
+                    ]);
+                }
+
                 setInputText('');
             }
 
@@ -56,7 +82,7 @@
                         placeholder="Send a message"
                         size="30"
                         onChange={saveInputText}
-                        value = {inputText}
+                        value={inputText}
 
                     />
                     <button onClick={sendMessage}>Send</button>
@@ -111,7 +137,7 @@
 
             // ===== CHAT MESSAGES STATE =====
             const [chatMessages, setChatMessages] = React.useState([
-            
+
             ]);
 
             // ===== COMBINE ALL COMPONENTS =====
