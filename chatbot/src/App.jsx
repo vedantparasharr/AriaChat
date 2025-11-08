@@ -41,7 +41,7 @@ function App() {
         <div className="header-info">
           <img className="header-avatar" src={botPFP} />
           <div className="header-name-card">
-            <div className="header-name">Assistant</div>
+            <div className="header-name">Aria - friendly chatbot</div>
             <div className="header-status">online</div>
           </div>
         </div>
