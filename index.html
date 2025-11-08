@@ -43,6 +43,7 @@
         .header-bar {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
             padding: 14px 16px;
             background: #0A84FF;
@@ -60,7 +61,11 @@
 
         .header-info {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .header-name-card {
             line-height: 1.2;
         }
 
@@ -74,6 +79,21 @@
             opacity: 0.8;
         }
 
+        .header-new-button {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-new-button img:active {
+            filter: brightness(0.5);
+        }
+
+        .header-new-button img:hover {
+            filter: brightness(0.8);
+        }
 
         .chat-area {
             height: 100%;
@@ -142,25 +162,72 @@
             flex: 1;
             padding: 12px 15px;
             border: 1px solid #c5c5c5;
-            border-radius: 12px;
+            border-radius: 99px;
         }
 
         .send-button {
+            height: 42px;
+            width: 42px;
             background-color: #0A84FF;
-            color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px 0;
-            font-weight: 500;
-            cursor: pointer;
-            width: 90px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .send-button img {
+            height: 18px;
+            width: 18px;
         }
 
         .send-button:disabled {
             opacity: .4;
         }
-        
+
+        .typing-bubble {
+            align-self: flex-start;
+            background: #e6f1ff;
+            color: #0a2f5a;
+            border: 1px solid #cfe1ff;
+            padding: 12px 16px;
+            border-radius: 20px;
+            border-bottom-left-radius: 4px;
+            max-width: 75%;
+            font-size: 15px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #0a2f5a;
+            border-radius: 50%;
+            animation: blink 1.4s infinite both;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: .2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: .2;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: .2;
+            }
+        }
     </style>
 </head>
 
@@ -211,30 +278,44 @@
                 setInputText('');
                 setIsLoading(true);
 
-                const newChatMessages = [
-                    ...chatMessages, {
-                        message: userInput, sender: 'user', id: crypto.randomUUID()
-                    }
-                ]
-                setChatMessages(newChatMessages)
-
+                const newMessages = [
+                    ...chatMessages,
+                    { message: userInput, sender: 'user', id: crypto.randomUUID() },
+                    { message: 'loading', sender: 'bot-loading', id: 'loading' }
+                ];
+                setChatMessages(newMessages);
                 try {
-                    const response = await getGeminiResponse(userInput);
+                    const lastMessages = chatMessages
+                        .slice(-20)
+                        .map(m => `${m.sender === 'user' ? 'User ' : 'Assistant '}: ${m.message}`)
+                        .join("\n");
+
+                    const fullPrompt = `
+                    Previous Conversation:
+                    ${lastMessages}
+
+                    User: ${userInput}
+                    Assistant: 
+                    `;
+                    const response = await getGeminiResponse(fullPrompt);
                     setChatMessages([
-                        ...newChatMessages, {
-                            message: response, sender: 'bot', id: crypto.randomUUID()
-                        }
+                        ...newMessages.filter(m => m.id !== 'loading'),
+                        { message: response, sender: 'bot', id: crypto.randomUUID() }
                     ]);
+
                 } catch (error) {
                     console.log(error);
+
+                    // remove typing bubble, then add error message
                     setChatMessages([
-                        ...newChatMessages,
+                        ...newMessages.filter(m => m.id !== 'loading'),
                         { message: "Sorry, I couldn't get a response right now.", sender: 'bot', id: crypto.randomUUID() }
                     ]);
                 }
 
                 setIsLoading(false);
             }
+
 
             function keyInteraction(event) {
                 if (event.key === 'Enter' && !isLoading) {
@@ -264,13 +345,23 @@
                         className="send-button"
                         disabled={isLoading || !inputText.trim()}
                     >
-                        {isLoading ? 'Thinking...' : 'Send'}
+                        <img src="/assets/images/send.png" height="21px" alt="" />
                     </button>
                 </div>
             )
         }
 
         function ChatMessage({ message, sender }) {
+            if (sender === 'bot-loading') {
+                return (
+                    <div className="typing-bubble">
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                    </div>
+                );
+            }
+
             return (
                 <div className={sender === 'bot' ? "bot-message" : "user-message"}>
                     {message}
@@ -281,7 +372,7 @@
         function ChatMessages({ chatMessages }) {
             const chatMessagesRef = React.useRef(null);
 
-            React.useEffect(() => { 
+            React.useEffect(() => {
                 const containerElem = chatMessagesRef.current;
                 if (containerElem) {
                     containerElem.scrollTop = containerElem.scrollHeight;
@@ -289,6 +380,7 @@
             }, [chatMessages])
             return (
                 <div className="chat-area" ref={chatMessagesRef}>
+
                     {chatMessages.map((chatMessage) => {
                         return (
                             <ChatMessage
@@ -306,14 +398,35 @@
             const [chatMessages, setChatMessages] = React.useState([]);
             const [isLoading, setIsLoading] = React.useState(false);
 
+            React.useEffect(() => {
+                const saved = localStorage.getItem('my-chat-history');
+                if (saved) {
+                    setChatMessages(JSON.parse(saved));
+                }
+            }, []);
+
+            React.useEffect(() => {
+                localStorage.setItem('my-chat-history', JSON.stringify(chatMessages));
+            }, [chatMessages])
+
+            function newChat() {
+                setChatMessages([]);
+                localStorage.clear();
+            }
+
             return (
                 <div className="app-container">
 
                     <div className="header-bar">
-                        <img className ="header-avatar" src="assets/images/bot.png" />
                         <div className="header-info">
-                            <div className="header-name">Assistant</div>
-                            <div className="header-status">online</div>
+                            <img className="header-avatar" src="assets/images/bot.png" />
+                            <div className="header-name-card">
+                                <div className="header-name">Assistant</div>
+                                <div className="header-status">online</div>
+                            </div>
+                        </div>
+                        <div>
+                            <button className="header-new-button" onClick={newChat}><img src="assets/images/add.png" alt="new chat" /></button>
                         </div>
                     </div>
 

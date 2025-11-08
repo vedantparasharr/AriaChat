@@ -1,0 +1,11 @@
+.chat-area {
+  height: 100%;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-grow: 1;
+}
