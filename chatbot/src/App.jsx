@@ -23,7 +23,8 @@ function App() {
 
   // ===== SAVE CHAT HISTORY (every time chatMessages changes) =====
   useEffect(() => {
-    localStorage.setItem('my-chat-history', JSON.stringify(chatMessages));
+    if(chatMessages.length > 0) {
+    localStorage.setItem('my-chat-history', JSON.stringify(chatMessages)); }
   }, [chatMessages])
 
   // ===== CLEAR CHAT =====
