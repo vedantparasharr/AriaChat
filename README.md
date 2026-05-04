@@ -8,7 +8,7 @@ It includes message persistence, typing feedback, and a clean mobile-first layou
 https://aria-chat-teal.vercel.app/
 
 ## Features
-
+ 
 - Real-time chat UI with user and assistant message bubbles
 - Assistant typing indicator while responses are loading
 - Local chat history persistence using browser localStorage
