@@ -20,7 +20,7 @@ https://aria-chat-teal.vercel.app/
 
 ## Tech Stack
 
-- React 19
+- React 19 
 - Vite 6
 - OpenRouter Chat Completions API
 - Plain CSS modules per component
