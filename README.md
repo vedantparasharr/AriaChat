@@ -5,7 +5,7 @@ It includes message persistence, typing feedback, and a clean mobile-first layou
   
 ## Live Demo
   
-https://aria-chat-teal.vercel.app/
+https://aria-chat-teal.vercel.app/  
 
 ## Features
  
