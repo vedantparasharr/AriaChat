@@ -9,7 +9,7 @@ https://aria-chat-teal.vercel.app/
 
 ## Features 
  
-- Real-time chat UI with user and assistant message bubbles
+- Real-time chat UI with user and assistant message bubbles 
 - Assistant typing indicator while responses are loading
 - Local chat history persistence using browser localStorage
 - New chat action to clear conversation state
