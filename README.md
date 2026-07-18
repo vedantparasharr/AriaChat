@@ -3,7 +3,7 @@
 AriaChat is a lightweight React chat interface powered by OpenRouter.
 It includes message persistence, typing feedback, and a clean mobile-first layout.
    
-## Live Demo
+## Live Demo 
   
 https://aria-chat-teal.vercel.app/  
 
